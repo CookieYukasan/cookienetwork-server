@@ -1,11 +1,14 @@
 const fs = require('fs')
+
 /**
  * Application configurations.
  */
+const isDev = process.env.NODE_ENV !== 'production'
+
 const defaultConfig = {
   app: {
-    port: 5000,
-    isDev: process.env.NODE_ENV !== 'production',
+    port: isDev ? 5000 : 80,
+    isDev,
   },
   mongo: {
     url: 'mongodb://localhost:27017/boxxshop',
