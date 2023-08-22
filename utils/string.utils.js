@@ -45,3 +45,10 @@ module.exports.formatCurrency = value => {
 module.exports.checkBannedWord = checkBannedWord
 
 module.exports.isValidObjectId = string => string && string.length === 24 && mongoose.Types.ObjectId.isValid(string)
+
+module.exports.formatSlug = string => {
+  return string
+    .toLowerCase()
+    .replace(/[^\w ]+/g, '')
+    .replace(/ +/g, '-')
+}

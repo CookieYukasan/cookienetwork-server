@@ -20,6 +20,8 @@ const passport = require('passport')
 const passportJwtModule = require('./modules/authentication/passportJwt.module')
 const AuthController = require('./routes/authentication.route')
 const UsersController = require('./routes/users.route')
+const ProductsController = require('./routes/products.route')
+const CategoriesController = require('./routes/categories.route')
 /**
  * Set moment timezone
  */
@@ -90,6 +92,8 @@ passportJwtModule.setupPassport(passport)
  */
 app.use('/auth', AuthController)
 app.use('/users', UsersController)
+app.use('/products', ProductsController)
+app.use('/categories', CategoriesController)
 /**
  * Handle 404 requests.
  */

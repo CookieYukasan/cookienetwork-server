@@ -12,49 +12,49 @@ const { updateDevice } = require('../modules/authentication/device.module')
 const { validateEmail } = require('../utils/string.utils')
 const config = require('../config/application.config')
 
-router.post(
-  '/register',
-  validateFieldsMiddleware({
-    email: 'required|email',
-    password: 'required|string|min:6|max:36',
-    userName: 'required|string|min:3|max:36',
-  }),
-  usersMiddleware.checkUserName,
-  usersMiddleware.checkTempEmail,
-  usersMiddleware.checkDuplicateEmail,
-  authMiddleware.validateCaptcha,
-  async (req, res) => {
-    try {
-      const user = await User.create({
-        email: req.body.email.toLowerCase(),
-        userName: req.body.userName,
-        password: await bcrypt.hash(req.body.password, config.bcrypt.numberOfHalts),
-      })
+// router.post(
+//   '/register',
+//   validateFieldsMiddleware({
+//     email: 'required|email',
+//     password: 'required|string|min:6|max:36',
+//     userName: 'required|string|min:3|max:36',
+//   }),
+//   usersMiddleware.checkUserName,
+//   usersMiddleware.checkTempEmail,
+//   usersMiddleware.checkDuplicateEmail,
+//   authMiddleware.validateCaptcha,
+//   async (req, res) => {
+//     try {
+//       const user = await User.create({
+//         email: req.body.email.toLowerCase(),
+//         userName: req.body.userName,
+//         password: await bcrypt.hash(req.body.password, config.bcrypt.numberOfHalts),
+//       })
 
-      const deviceHash = await updateDevice({
-        userId: user._id,
-        device: req.body.device,
-        ipAddress: req.ip,
-        authenticationSource: 'web',
-      })
+//       const deviceHash = await updateDevice({
+//         userId: user._id,
+//         device: req.body.device,
+//         ipAddress: req.ip,
+//         authenticationSource: 'web',
+//       })
 
-      const token = await passportJwtModule.signJwtToken(user, deviceHash)
+//       const token = await passportJwtModule.signJwtToken(user, deviceHash)
 
-      passportJwtModule.setCookie(res, token)
+//       passportJwtModule.setCookie(res, token)
 
-      // @todo send email when user register
-      // sendEmailSuccessRegister(user).catch(error => sentryCaptureException(error))
+//       // @todo send email when user register
+//       // sendEmailSuccessRegister(user).catch(error => sentryCaptureException(error))
 
-      res.send({
-        user: await User.populateFull(user),
-        token,
-      })
-    } catch (err) {
-      sentryCaptureException(err)
-      res.status(500).send({ message: messages.database_error })
-    }
-  }
-)
+//       res.send({
+//         user: await User.populateFull(user),
+//         token,
+//       })
+//     } catch (err) {
+//       sentryCaptureException(err)
+//       res.status(500).send({ message: messages.database_error })
+//     }
+//   }
+// )
 
 router.post(
   '/login',
@@ -71,14 +71,10 @@ router.post(
         [isEmail ? 'email' : 'userName']: req.body.email,
       })
 
-      if (!user || user.banned) {
-        return res.status(401).send({ message: messages.auth_error })
-      }
-
       const isPassportValid = await User.verifyPassword(req.body.password, user.password)
 
       if (!isPassportValid) {
-        return res.status(403).send({ message: messages.auth_error })
+        return res.status(401).send({ message: messages.auth_error })
       }
 
       delete user.password

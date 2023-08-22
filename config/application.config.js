@@ -8,7 +8,7 @@ const defaultConfig = {
     isDev: process.env.NODE_ENV !== 'production',
   },
   mongo: {
-    url: 'mongodb://localhost:27017/cookienetwork',
+    url: 'mongodb://localhost:27017/boxxshop',
     config: {
       useNewUrlParser: true,
       useUnifiedTopology: true,

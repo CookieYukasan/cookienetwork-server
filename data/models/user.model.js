@@ -4,7 +4,7 @@ const MongoPaging = require('mongo-cursor-pagination')
 const bcrypt = require('bcrypt')
 const { bannedHook, softDeleteHook, updatedAtHook } = require('../../utils/database.utils')
 
-const userSchema = mongoose.Schema({
+const usersSchema = mongoose.Schema({
   userName: {
     type: String,
     unique: true,
@@ -18,59 +18,9 @@ const userSchema = mongoose.Schema({
   password: {
     type: String,
     required: true,
-    select: false,
   },
-  banned: {
-    type: Boolean,
-    default: false,
-  },
-  role: {
+  image: {
     type: String,
-    default: 'user',
-    enum: ['user', 'premium', 'admin'],
-    index: true,
-  },
-  device: {
-    hash: {
-      type: String,
-    },
-    ipAddress: {
-      type: String,
-    },
-    authenticationSource: {
-      type: String,
-      enum: ['discord', 'web'],
-    },
-    browser: {
-      name: {
-        type: String,
-      },
-      version: {
-        type: String,
-      },
-    },
-    os: {
-      name: {
-        type: String,
-      },
-      version: {
-        type: String,
-      },
-    },
-    platform: {
-      type: {
-        type: String,
-      },
-      vendor: {
-        type: String,
-      },
-      model: {
-        type: String,
-      },
-    },
-  },
-  bannedAt: {
-    type: Date,
   },
   createdAt: {
     type: Date,
@@ -82,72 +32,42 @@ const userSchema = mongoose.Schema({
   },
 })
 
-userSchema.statics.verifyExistsUserName = function (userName) {
-  return this.exists({ userName: userName })
-}
-
-userSchema.statics.verifyPassword = async function (password, encryptedPassword) {
-  return await bcrypt.compare(password, encryptedPassword)
-}
-
-// userSchema.statics.generateRandomUserName = async function (userName) {
-//   const userNamePresentInDb = await this.verifyExistsUserName(userName)
-
-//   if (userNamePresentInDb) {
-//     const newUserName = `${userName}_${randomStringGenerator(config.users.userNameCharsLimit - userName.length)}`
-//     return this.generateRandomUserName(newUserName)
-//   }
-
-//   return userName.toLowerCase()
+// usersSchema.statics.reActivate = function (userId) {
+//   return Promise.all([
+//     this.updateOne(
+//       {
+//         _id: userId,
+//       },
+//       {
+//         $set: {
+//           disabled: false,
+//         },
+//       }
+//     ),
+//   ])
 // }
 
-userSchema.statics.reActivate = function (userId) {
-  return Promise.all([
-    this.updateOne(
-      {
-        _id: userId,
-      },
-      {
-        $set: {
-          disabled: false,
-        },
-      }
-    ),
-  ])
+usersSchema.statics.populateFull = async function (product) {
+  let _product = product.toJSON ? product.toJSON() : product
+
+  return _product
 }
 
-userSchema.statics.populateFull = async function (user) {
-  let _user = user.toJSON ? user.toJSON() : user
+usersSchema.plugin(MongoPaging.mongoosePlugin)
 
-  _user = await this.populateUserLists(_user)
+usersSchema.pre('findOne', bannedHook)
+usersSchema.pre('find', bannedHook)
 
-  return _user
-}
+usersSchema.pre('findOne', softDeleteHook)
+usersSchema.pre('find', softDeleteHook)
 
-userSchema.statics.populateUserLists = async function (user) {
-  const _user = user.toJSON ? user.toJSON() : user
+usersSchema.pre('updateOne', updatedAtHook)
+usersSchema.pre('save', updatedAtHook)
 
-  _user.isAdmin = user.role === 'admin'
-  _user.isPremium = user.role === 'premium'
-
-  return _user
-}
-
-userSchema.plugin(MongoPaging.mongoosePlugin)
-
-userSchema.pre('findOne', bannedHook)
-userSchema.pre('find', bannedHook)
-
-userSchema.pre('findOne', softDeleteHook)
-userSchema.pre('find', softDeleteHook)
-
-userSchema.pre('updateOne', updatedAtHook)
-userSchema.pre('save', updatedAtHook)
-
-userSchema.index({ banned: 1, disabled: 1 }, { partialFilterExpression: { disabled: false, banned: false } })
+// usersSchema.index({ banned: 1, disabled: 1 }, { partialFilterExpression: { disabled: false, banned: false } })
 /**
  * @see https://mongoosejs.com/docs/schematypes.html
  */
-const User = mongoose.model('User', userSchema)
+const User = mongoose.model('User', usersSchema)
 
 module.exports = User
